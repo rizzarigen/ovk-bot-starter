@@ -23,7 +23,6 @@ async def ping_cmd(message: Message):
 
 
 if __name__ == "__main__":
-    asyncio.run(bot.api.call("messages.send", group_id=12023, message="йоу"))
     asyncio.run(bot.start_polling())
 
 ## photo13513_80 щперма
