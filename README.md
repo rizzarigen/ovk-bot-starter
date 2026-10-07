@@ -1,4 +1,9 @@
 # ovk-bot-starter
+Простая самописная микролибка для создания ботов в ОпенВК
+
+## Requirements:
+- Pydantic
+- httpx
 
 ## Current Version
 0.2
