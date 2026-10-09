@@ -28,7 +28,7 @@ async def main():
     
     api = OvkApi(
         login="",
-        password=" ## or token= instead of credentials
+        password="" ## or token= instead of credentials
     ) 
     
     await processor.add_di("api", api)
