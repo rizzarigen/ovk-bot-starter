@@ -1,42 +1,85 @@
 from core import OvkApi, Processor
 from core.filters import Command, Text
-from core.types import Message
+from core.types import Message, Photo
 import asyncio
+import dotenv
+import os
+
+dotenv.load_dotenv()
+
 
 processor = Processor()
 
 
-@processor.add(Command(prefix=".", name="привет"))
-async def hello_command(message: Message, api: OvkApi):
-    """Приветствие пользователя"""
-    await api.send_message(peer_id=message.peer_id, message="Привет! Как дела?")
+#################################################
+#               DEPRECATED METHODS              #
+#################################################
 
 
-@processor.add(Text("хай"))
-async def hi_command(message: Message, api: OvkApi):
-    """Реакция на точное 'хай'"""
-    await api.send_message(peer_id=message.peer_id, message="Хай!")
+#@processor.add(Command(prefix=".", name="привет"))
+#async def hello_command(message: Message, api: OvkApi):
+#    """Приветствие пользователя"""
+#    await api.send_message(peer_id=message.peer_id, message="Привет! Как дела?")
+#    ### deprecated
 
 
-@processor.add(Command(prefix=".", name="пинг"))
-async def ping_command(message: Message, api: OvkApi):
-    """Реагирует и на /ping, и на /pong"""
-    print(message.text)
-    await api.send_message(peer_id=message.peer_id, message="pong")
+#@processor.add(Text("хай"))
+#async def hi_command(message: Message, api: OvkApi):
+#    """Реакция на точное 'хай'"""
+#    await api.send_message(peer_id=message.peer_id, message="Хай!")
+#    ### deprecated
+
+
+#@processor.add(Command(prefix=".", name="пинг"))
+#async def ping_command(message: Message, api: OvkApi):
+#    """Реагирует и на /ping, и на /pong"""
+#    print(message.text)
+#    await api.send_message(peer_id=message.peer_id, message="pong")
+#    ### deprecated
     
-@processor.add(Command(prefix=".", name="пикча"))
-async def pikcha_command(message: Message, api: OvkApi):
-    pikch = await api.send_photo(peer_id=message.peer_id, photo_path="photos/test.jpg", message="Вот твоя пикча!")
-    print(pikch)
+#@processor.add(Command(prefix=".", name="пикча"))
+#async def pikcha_command(message: Message, api: OvkApi):
+#    await api.send_photo(peer_id=message.peer_id, photo_path="photos/test.jpg", message="Вот твоя пикча!")
+#    ### deprecated
+
+#@processor.add(Command(prefix=".", name="пикча2"))
+#async def pikcha_command(message: Message, api: OvkApi):
+#    photo = Photo(path='photos/test.jpg')
+#    await api.send_message(peer_id=message.peer_id, message="Держи!", photo=photo)
+#    ### deprecated
+    
+    
+    
+#################################################
+#               ACTUAL METHODS                  #
+#################################################
+
+@processor.add(Command(prefix='.', name="ответ"))
+async def otvet_command(message: Message):
+    await message.answer("опааа")
+    
+@processor.add(Command(prefix='.', name="фото"))
+async def otvet_command(message: Message):
+    photo = Photo(path='photos/test.jpg')
+    await message.answer("опааа", photo=photo)
+    
+@processor.add(Command(prefix='.', name="реплай"))
+async def otvet_command(message: Message):
+    await message.reply("+реп" )
+    
+    
+    
+
 
 async def main():
     
     api = OvkApi(
-        login="t",
-        password="" ## or token= instead of credentials
+        login=os.getenv("LOGIN"),
+        password=os.getenv("PASSWORD") ## or token= instead of credentials
     ) 
     
-    await processor.add_di("api", api)
+    ### await processor.add_di("api", api) 
+    ### no need to DI the API instance if you gonna use actual methods
     
     await api.long_poll_async(processor)
        

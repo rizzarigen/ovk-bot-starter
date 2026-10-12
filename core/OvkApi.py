@@ -6,6 +6,8 @@ from .types import Message
 from .types.uploads.PhotoUpload import PhotoUpload
 from .types.responses.PhotoUploadResponse import PhotoUploadResponse
 from .Processor import Processor
+from .types.Photo import Photo
+from .exceptions.HandleException import HandleException
 
 class OvkApi:
     def __init__(
@@ -98,8 +100,11 @@ class OvkApi:
                                     ts=update[4],
                                     text=update[6],
                                     extra_fields=update[7] if len(update) > 7 and isinstance(update[7], dict) else {},
-                                )
-                                await processor.process(msg)
+                                ).bind_api(self)
+                                try:
+                                    await processor.process(msg)
+                                except Exception as e:
+                                    print(e)
 
                         params["ts"] = data.get("ts")
                 except httpx.TimeoutException:
@@ -108,11 +113,26 @@ class OvkApi:
                     print(f"Ошибка запроса: {e}")
                     await asyncio.sleep(5)
 
-    async def send_message(self, peer_id: int, message: str, reply_to: int | None = None):
+    async def send_message(self, peer_id: int, message: str, reply_to: int | None = None, photo: Photo = None):
         params = {"peer_id": peer_id, "message": message, "reply_to": reply_to}
+        
+        if photo is not None:
+            upload_response = await self._upload_photo(peer_id, photo.path)
+            saved_photos = await self._save_uploaded_photo(upload_response)
+        
+            if not saved_photos.get("response"):
+                raise Exception("Failed to save uploaded photo")
+
+            photo_info = saved_photos["response"][0]
+            attachment = f"photo{photo_info['owner_id']}_{photo_info['id']}_{photo_info['access_key'] if 'access_key' in photo_info else ''}"
+            params["attachment"] = attachment
+            
+            
         return await self._call_api_post("messages.send", params=params)
     
     async def send_photo(self, peer_id: int, photo_path: str, message: str = ""):
+        print("[WARN] send_photo is deprecated and will be removed. Use send_message with Photo() object witth photo= kwarg instead")    
+        
         upload_response = await self._upload_photo(peer_id, photo_path)
         saved_photos = await self._save_uploaded_photo(upload_response)
         
