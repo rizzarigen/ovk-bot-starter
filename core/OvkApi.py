@@ -108,7 +108,7 @@ class OvkApi:
                                         peer_id=msg.peer_id,
                                         message = e.__str__()
                                     )
-                                    raise e
+                                    
 
                         params["ts"] = data.get("ts")
                 except httpx.TimeoutException:
