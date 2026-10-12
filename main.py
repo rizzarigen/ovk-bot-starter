@@ -65,8 +65,16 @@ async def otvet_command(message: Message):
     
 @processor.add(Command(prefix='.', name="реплай"))
 async def otvet_command(message: Message):
+    print(message.text)
     await message.reply("+реп" )
     
+
+@processor.add(Command(prefix='.', name="арги", req_args=["arg1", "arg2"]))
+async def iskl_command(message: Message, arg1, arg2):
+    tail = message.args_rest
+    await message.answer(f"Опа! Аргументы: {arg1=}, {arg2=}, {tail=}")
+    
+ 
     
     
 

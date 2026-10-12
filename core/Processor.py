@@ -2,7 +2,7 @@
 
 
 from .types import Message, Handler
-from .filters import BaseFilter
+from .filters import BaseFilter, Command
 import inspect
 
 class Processor:
@@ -23,20 +23,32 @@ class Processor:
 
     async def process(self, message: Message):
         for command in self.commands:
-            if all(f(message) for f in command.filters):
+            matched = [f for f in command.filters if f(message)]
+            
+            if len(matched) == len(command.filters):  # все фильтры сработали
+                # matched — список сработавших фильтров
                 
                 sig = inspect.signature(command.handler)
+                kwargs = {"message": message}
                 
-                kwargs = {}
-                kwargs["message"] = message 
-                
-                for name, param in sig.parameters.items():
+                arg_names = sig.parameters.keys()
+
+                        
+                for f in matched:
+                    if isinstance(f, Command) and isinstance(message.args, list):
+
+                        args = message.args
+                        args_count = len(f.req_args)
+                        message = message.set_required_args_count(args_count)
+                        for i in range(args_count):
+                            kwargs[f.req_args[i]] = args[i]
+                            
+                for name in arg_names:
                     if name in self.di:
                         kwargs[name] = self.di[name]
                 
                 await command.handler(**kwargs)
-                
-                return  # первая совпавшая команда выигрывает
+                return
             
     async def add_di(self, name: str, value):
         self.di[name] = value

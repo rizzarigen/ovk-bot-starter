@@ -104,7 +104,11 @@ class OvkApi:
                                 try:
                                     await processor.process(msg)
                                 except Exception as e:
-                                    print(e)
+                                    await self.send_message(
+                                        peer_id=msg.peer_id,
+                                        message = e.__str__()
+                                    )
+                                    raise e
 
                         params["ts"] = data.get("ts")
                 except httpx.TimeoutException:
@@ -141,7 +145,6 @@ class OvkApi:
         
         photo_info = saved_photos["response"][0]
         attachment = f"photo{photo_info['owner_id']}_{photo_info['id']}_{photo_info['access_key'] if 'access_key' in photo_info else ''}"
-        print(attachment)
         
         params = {"peer_id": peer_id, "message": message, "attachment": attachment}
         return await self._call_api_post("messages.send", params=params)

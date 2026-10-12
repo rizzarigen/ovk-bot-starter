@@ -8,14 +8,14 @@ class Command(BaseFilter):
         self,
         prefix: str,
         name: str,
+        req_args: list = None,
         *,
         case_sensitive: bool = False,
-        allow_args: bool = True,
     ):
         self.prefix = prefix
         self.name = name
         self.case_sensitive = case_sensitive
-        self.allow_args = allow_args
+        self.req_args = req_args
 
     def __call__(self, message: Message) -> bool:
         if not message.text:
@@ -24,12 +24,15 @@ class Command(BaseFilter):
         text = message.text if self.case_sensitive else message.text.lower()
         prefix = self.prefix if self.case_sensitive else self.prefix.lower()
         name = self.name if self.case_sensitive else self.name.lower()
+        
 
         if not text.startswith(prefix + name):
             return False
 
-        if self.allow_args:
-            rest = text[len(prefix) + len(name):]
-            return rest == "" or rest.startswith(" ")
+        if self.req_args is not None:
+            rest = text[len(prefix) + len(name) + 1:]
+            if len(rest.split(" ")) < len(self.req_args):
+                raise Exception("Аргументы команды не указаны или указаны не полностью")
+            return rest == "" or len(rest) > 0
 
         return text == prefix + name
