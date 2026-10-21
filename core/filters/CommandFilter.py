@@ -32,7 +32,7 @@ class Command(BaseFilter):
         if self.req_args is not None:
             rest = text[len(prefix) + len(name) + 1:]
             if len(rest.split(" ")) < len(self.req_args):
-                raise Exception("Аргументы команды не указаны или указаны не полностью")
+                return False
             return rest == "" or len(rest) > 0
 
         return text == prefix + name

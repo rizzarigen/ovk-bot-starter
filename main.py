@@ -81,10 +81,18 @@ async def iskl_command(message: Message, arg1, arg2):
 
 async def main():
     
-    api = OvkApi(
+    ### FROM NOW WE USE BRAND NEW FACTORY FUNCTIONS TO INSTANTIATE OVKAPI OBJECT!
+    
+    api = OvkApi.by_credentials(
         login=os.getenv("LOGIN"),
-        password=os.getenv("PASSWORD") ## or token= instead of credentials
-    ) 
+        password=os.getenv("PASSWORD")
+    )
+    
+    ### or OvkApi.by_token(token)
+    
+    
+    
+    
     
     ### await processor.add_di("api", api) 
     ### no need to DI the API instance if you gonna use actual methods

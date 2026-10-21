@@ -8,21 +8,21 @@ from .types.responses.PhotoUploadResponse import PhotoUploadResponse
 from .Processor import Processor
 from .types.Photo import Photo
 from .exceptions.HandleException import HandleException
+import logging
+
+logger = logging.getLogger(__name__)
 
 class OvkApi:
     def __init__(
         self,
         token: str | None = None,
-        login: str | None = None,
-        password: str | None = None,
         base_url: str = "https://api.openvk.org",
     ):
+        
         self._client = httpx.AsyncClient(base_url=base_url)
 
-        if token is None and login is None and password is None:
-            raise Exception("хоть че нить дай, как я войду бляь?")
-        elif (login is None or password is None) and token is None:
-            raise Exception("Ну ты бля креденшлы дай, крендель ебана")
+        if token is None:
+            raise ValueError("There is not any token")
 
         self._token = token if token is not None else httpx.get(
             f"{base_url}/token?username={login}&password={password}&grant_type=password"
@@ -30,6 +30,46 @@ class OvkApi:
 
         self._client.headers.update({"Authorization": f"Bearer {self._token}"})
 
+    @staticmethod
+    def by_credentials(
+        login: str | None = None,
+        password: str | None = None,
+        base_url: str | None = "https://api.openvk.org"
+        ) -> "OvkApi":
+        if login is None or password is None:
+            raise ValueError("Give the full credentials!")
+        
+        
+        token = OvkApi._get_token(
+            login,
+            password,
+            base_url
+        )
+        
+        api_instance = OvkApi(token=token, base_url=base_url)
+        return api_instance
+        
+    @staticmethod
+    def by_token(
+        token: str | None = None,
+        base_url: str | None = "https://api.openvk.org"
+    ) -> "OvkApi":
+        
+        if token is None:
+            raise ValueError("There is no token, just give some.")
+        
+        return OvkApi(token = token, base_url = base_url)
+    
+    @staticmethod
+    def _get_token(login: str | None = None,
+        password: str | None = None,
+        base_url: str | None = "https://api.openvk.org"
+        ):
+        
+        return httpx.get(
+                    f"{base_url}/token?username={login}&password={password}&grant_type=password"
+                ).json().get("access_token")
+    
     async def _call_api(self, method: str, params: dict | None = None):
         if params is None:
             params = {}
@@ -106,8 +146,9 @@ class OvkApi:
                                 except Exception as e:
                                     await self.send_message(
                                         peer_id=msg.peer_id,
-                                        message = e.__str__()
+                                        message = "Произошла ошибка!"
                                     )
+                                    logger.error(e.__cause__, e.__str__, e.__context__)
                                     
 
                         params["ts"] = data.get("ts")
