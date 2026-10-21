@@ -82,13 +82,7 @@ class OvkApi:
         response = await self._client.post(f"/method/{method}", data=params)
         return response.json()
 
-    async def _get_long_poll_server(self):
-        resp = await self._call_api("messages.getLongPollServer")
-        resp = resp.get("response", {})
-        ts = resp.get("ts")
-        key = resp.get("key")
-        url = resp.get("server")
-        return url, key, ts
+
     
     async def _get_message_upload_photo_url(self, peer_id: int):
         params = {"peer_id": peer_id}
@@ -117,12 +111,13 @@ class OvkApi:
         return await self._call_api("photos.saveMessagesPhoto", params=params)
         
     
-    
+    async def _validate_url(self, url: str):
+        return url if url.startswith("http") else f"https://{url}"
     
     async def long_poll_async(self, processor: Processor):
         url, key, ts = await self._get_long_poll_server()
 
-        url = url if url.startswith("http") else f"https://{url}"
+        url = self._validate_url(url)
 
         params = {"wait": 25, "key": key, "version": 3, "act": "a_check", "ts": ts, "mode": 2}
         async with httpx.AsyncClient() as client:
