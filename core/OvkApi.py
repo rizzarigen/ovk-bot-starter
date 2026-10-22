@@ -122,18 +122,19 @@ class OvkApi:
     async def start_polling(self, processor: Processor):
         
         
-        server = await LongPollServer.by_api(self) 
+        server = await LongPollServer.by_api(self)
         
-        while True:
-            try:
-                for event in await server.send_longpoll_request():
-                    if event.type_code == 4:
-                        msg = await Message.by_event(event=event)
-                        msg.bind_api(self)
-                        await processor.process(msg)
-                        
-            except httpx.TimeoutException:
-                continue
+        async with server as s:
+            while True:
+                try:
+                    for event in await s.send_longpoll_request():
+                        if event.type_code == 4:
+                            msg = await Message.by_event(event=event)
+                            msg.bind_api(self)
+                            await processor.process(msg)
+                            
+                except httpx.TimeoutException:
+                    continue
             
 
     async def send_message(self, peer_id: int, message: str, reply_to: int | None = None, photo: Photo = None):

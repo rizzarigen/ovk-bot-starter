@@ -17,6 +17,12 @@ class LongPollServer:
         self._wait: int = 25
         self._version: int = 3
         self._mode = 2
+        
+    async def __aenter__(self):
+        return self
+    
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.client.aclose()
     
     @staticmethod
     async def _validate_url(url: str):
