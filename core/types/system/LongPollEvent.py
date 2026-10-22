@@ -4,6 +4,10 @@ class LongPollEvent:
         self.type_code = data[0]
         self.update = data[1:]
     
+    @property
+    def message_id(self):
+        return self.update[0]
+    
     @property    
     def peer_id(self):
         return self.update[2]

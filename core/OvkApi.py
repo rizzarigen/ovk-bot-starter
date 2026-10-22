@@ -9,6 +9,8 @@ from .Processor import Processor
 from .types.Photo import Photo
 from .exceptions.HandleException import HandleException
 import logging
+from .types.system.LongPollServer import LongPollServer
+from .types.system.LongPollEvent import LongPollEvent
 
 logger = logging.getLogger(__name__)
 
@@ -110,48 +112,29 @@ class OvkApi:
         }
         return await self._call_api("photos.saveMessagesPhoto", params=params)
         
-    
-    async def _validate_url(self, url: str):
-        return url if url.startswith("http") else f"https://{url}"
+
     
     async def long_poll_async(self, processor: Processor):
-        url, key, ts = await self._get_long_poll_server()
+        logger.warning("[WARN] long_poll_async() is deprecated now and will be deleted in 0.5. Use start_polling() with same arguments instead")
 
-        url = self._validate_url(url)
-
-        params = {"wait": 25, "key": key, "version": 3, "act": "a_check", "ts": ts, "mode": 2}
-        async with httpx.AsyncClient() as client:
-            while True:
-                try:
-                    response = await client.get(url, params=params, timeout=30)
-                    if response.status_code == 200:
-                        data = response.json()
+        await self.start_polling(processor)
+            
+    async def start_polling(self, processor: Processor):
+        
+        
+        server = await LongPollServer.by_api(self) 
+        
+        while True:
+            try:
+                for event in await server.send_longpoll_request():
+                    if event.type_code == 4:
+                        msg = await Message.by_event(event=event)
+                        msg.bind_api(self)
+                        await processor.process(msg)
                         
-                        for update in data.get("updates", []):
-                            if update[0] == 4 and len(update) >= 7:
-                                msg = Message(
-                                    id=update[1],
-                                    peer_id=update[3],
-                                    ts=update[4],
-                                    text=update[6],
-                                    extra_fields=update[7] if len(update) > 7 and isinstance(update[7], dict) else {},
-                                ).bind_api(self)
-                                try:
-                                    await processor.process(msg)
-                                except Exception as e:
-                                    await self.send_message(
-                                        peer_id=msg.peer_id,
-                                        message = "Произошла ошибка!"
-                                    )
-                                    logger.error(e.__cause__, e.__str__, e.__context__)
-                                    
-
-                        params["ts"] = data.get("ts")
-                except httpx.TimeoutException:
-                    continue
-                except httpx.RequestError as e:
-                    print(f"Ошибка запроса: {e}")
-                    await asyncio.sleep(5)
+            except httpx.TimeoutException:
+                continue
+            
 
     async def send_message(self, peer_id: int, message: str, reply_to: int | None = None, photo: Photo = None):
         params = {"peer_id": peer_id, "message": message, "reply_to": reply_to}

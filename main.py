@@ -65,7 +65,6 @@ async def otvet_command(message: Message):
     
 @processor.add(Command(prefix='.', name="реплай"))
 async def otvet_command(message: Message):
-    print(message.text)
     await message.reply("+реп" )
     
 
@@ -90,14 +89,16 @@ async def main():
     
     ### or OvkApi.by_token(token)
     
-    
-    
-    
-    
+
     ### await processor.add_di("api", api) 
     ### no need to DI the API instance if you gonna use actual methods
     
-    await api.long_poll_async(processor)
+    #### await api.long_poll_async(processor) <<< DEPRECATED
+    await api.start_polling(processor)
        
-
-asyncio.run(main())
+       
+try:
+    print("Start polling...")
+    asyncio.run(main())
+except KeyboardInterrupt:
+    print("\nShutting down...")

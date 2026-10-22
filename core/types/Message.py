@@ -1,6 +1,7 @@
 
 
 from pydantic import BaseModel, PrivateAttr, computed_field
+from .system.LongPollEvent import LongPollEvent
 
 class Message(BaseModel):
     id: int | None = None
@@ -34,6 +35,17 @@ class Message(BaseModel):
             reply_to = self.id,
             photo = photo
         )
+    
+    @staticmethod
+    async def by_event(event: "LongPollEvent"):
+        return Message(
+                        id = event.message_id,
+                        peer_id= event.peer_id,
+                        ts=event.timestamp,
+                        text = event.text,
+                        extra_fields=event.extra_fields
+                        )
+        
         
     @computed_field(return_type=None|list)
     def args(self):

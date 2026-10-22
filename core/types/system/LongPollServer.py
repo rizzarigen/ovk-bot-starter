@@ -1,4 +1,4 @@
-from ...OvkApi import OvkApi
+
 import logging
 from httpx import AsyncClient, TimeoutException, RequestError
 from .LongPollEvent import LongPollEvent
@@ -8,25 +8,34 @@ logger = logging.getLogger(__name__)
 
 
 class LongPollServer:
-    def __init__(self, url, key, ts, api):
+    def __init__(self, url, key, ts, client: AsyncClient):
         self.url: str = url
         self.key: str = key
         self.ts:  str = ts
-        self.api: "OvkApi" = api
+        self.client = client
         
         self._wait: int = 25
         self._version: int = 3
         self._mode = 2
+    
+    @staticmethod
+    async def _validate_url(url: str):
+        return url if url.startswith("http") else f"https://{url}"
         
     @staticmethod
     async def by_api(api: "OvkApi"):
+        
         resp = await api._call_api("messages.getLongPollServer")
         resp = resp.get("response", {})
-    
+        client = AsyncClient()
+
         ts = resp.get("ts")
         key = resp.get("key")
-        url = resp.get("server")
-        return LongPollServer(url, key, ts)
+        url = await LongPollServer._validate_url(resp.get("server"))
+        
+        
+
+        return LongPollServer(url, key, ts, client)
     
     @property
     async def _request_parameters(self):
@@ -37,10 +46,9 @@ class LongPollServer:
                 "mode": self._mode}
     
     async def send_longpoll_request(self) -> list[LongPollEvent]:
-        async with AsyncClient as client:
             try:
-                response = await client.get(self.url,
-                                            params = self._request_parameters,
+                response = await self.client.get(self.url,
+                                            params = await self._request_parameters,
                                             timeout = 30
                                             )
                 if response.status_code == 200:
@@ -54,11 +62,13 @@ class LongPollServer:
                         result.append(
                             LongPollEvent(update)
                             )
+                    self.ts = data.get("ts")
                     return result
             except TimeoutException as e:
                 raise e
             except RequestError:
                 logger.error(f"Ошибка запроса: {e}")
                 await asyncio.sleep(5)
+    
     
     
