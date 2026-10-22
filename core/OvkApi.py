@@ -135,6 +135,8 @@ class OvkApi:
                             
                 except httpx.TimeoutException:
                     continue
+                except Exception as e:
+                    logger.error("[ERROR] ", e.__cause__, e.__context__)
             
 
     async def send_message(self, peer_id: int, message: str, reply_to: int | None = None, photo: Photo = None):

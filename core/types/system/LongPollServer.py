@@ -57,6 +57,7 @@ class LongPollServer:
                                             params = await self._request_parameters,
                                             timeout = 30
                                             )
+                response.raise_for_status()
                 if response.status_code == 200:
                     data = response.json()
                     
