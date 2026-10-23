@@ -4,15 +4,16 @@
 from .types import Message, Handler
 from .filters import BaseFilter, Command
 import inspect
+from .types.system.LongPollEvent import LongPollEvent
 
 class Processor:
     def __init__(self):
-        self.commands: list[Handler] = []
+        self.handlers: list[Handler] = []
         self.di: dict = {}
 
     def add(self, *filters: BaseFilter):
         def decorator(func):
-            self.commands.append(Handler(
+            self.handlers.append(Handler(
                 name=func.__name__,
                 description=func.__doc__ or "",
                 handler=func,
@@ -20,15 +21,15 @@ class Processor:
             ))
             return func
         return decorator
+    
 
-    async def process(self, message: Message):
-        for command in self.commands:
-            matched = [f for f in command.filters if f(message)]
+    async def _process_message(self, message: Message):
+        for handler in self.handlers:
+            matched = [f for f in handler.filters if f(message)]
             
-            if len(matched) == len(command.filters):  # все фильтры сработали
-                # matched — список сработавших фильтров
-                
-                sig = inspect.signature(command.handler)
+            if await handler.is_match(message):  
+                print("MATCHED!")
+                sig = inspect.signature(handler.handler)
                 kwargs = {"message": message}
                 
                 arg_names = sig.parameters.keys()
@@ -47,9 +48,15 @@ class Processor:
                     if name in self.di:
                         kwargs[name] = self.di[name]
                 
-                await command.handler(**kwargs)
+                await handler.handler(**kwargs)
                 return
             
+    async def process_event(self, event: LongPollEvent, api: "OvkApi"):        
+        if event.type_code == 4:
+            msg = await Message.by_event(event)
+            msg.bind_api(api)
+            await self._process_message(msg)
+        
     async def add_di(self, name: str, value):
         self.di[name] = value
 

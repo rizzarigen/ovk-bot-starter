@@ -128,10 +128,7 @@ class OvkApi:
             while True:
                 try:
                     for event in await s.send_longpoll_request():
-                        if event.type_code == 4:
-                            msg = await Message.by_event(event=event)
-                            msg.bind_api(self)
-                            await processor.process(msg)
+                        await processor.process_event(event=event, api = self)
                             
                 except httpx.TimeoutException:
                     continue
