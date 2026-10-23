@@ -52,6 +52,7 @@ class LongPollServer:
                 "mode": self._mode}
     
     async def send_longpoll_request(self) -> list[LongPollEvent]:
+            print("бляь")
             try:
                 response = await self.client.get(self.url,
                                             params = await self._request_parameters,
@@ -73,7 +74,7 @@ class LongPollServer:
                     return result
             except TimeoutException as e:
                 raise e
-            except RequestError:
+            except RequestError as e:
                 logger.error(f"Ошибка запроса: {e}")
                 await asyncio.sleep(5)
     

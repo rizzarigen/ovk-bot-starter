@@ -16,7 +16,7 @@ class Processor:
             self.handlers.append(Handler(
                 name=func.__name__,
                 description=func.__doc__ or "",
-                handler=func,
+                func=func,
                 filters=list(filters),
             ))
             return func
@@ -25,30 +25,9 @@ class Processor:
 
     async def _process_message(self, message: Message):
         for handler in self.handlers:
-            matched = [f for f in handler.filters if f(message)]
-            
             if await handler.is_match(message):  
                 print("MATCHED!")
-                sig = inspect.signature(handler.handler)
-                kwargs = {"message": message}
-                
-                arg_names = sig.parameters.keys()
-
-                        
-                for f in matched:
-                    if isinstance(f, Command) and isinstance(message.args, list):
-
-                        args = message.args
-                        args_count = len(f.req_args)
-                        message = message.set_required_args_count(args_count)
-                        for i in range(args_count):
-                            kwargs[f.req_args[i]] = args[i]
-                            
-                for name in arg_names:
-                    if name in self.di:
-                        kwargs[name] = self.di[name]
-                
-                await handler.handler(**kwargs)
+                await handler.handle(message, self.di)
                 return
             
     async def process_event(self, event: LongPollEvent, api: "OvkApi"):        
