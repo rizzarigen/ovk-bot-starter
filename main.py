@@ -67,10 +67,10 @@ async def otvet_command(message: Message):
 async def otvet_command(message: Message):
     await message.reply("+реп" )
     
-
+### tail = None is important if you gonna use it. Temporarily workarounded, yep.
 @processor.add(Command(prefix='.', name="арги", req_args=["arg1", "arg2"]))
-async def iskl_command(message: Message, arg1, arg2):
-    tail = message.args_rest
+async def iskl_command(message: Message, arg1, arg2, tail = None):
+    print("handled")
     await message.answer(f"Опа! Аргументы: {arg1=}, {arg2=}, {tail=}")
     
  

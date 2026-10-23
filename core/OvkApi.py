@@ -41,14 +41,14 @@ class OvkApi:
         if login is None or password is None:
             raise ValueError("Give the full credentials!")
         
-        
         token = OvkApi._get_token(
-            login,
-            password,
-            base_url
-        )
-        
+                                login,
+                                password,
+                                base_url
+                            )
+        print("token is ready")     
         api_instance = OvkApi(token=token, base_url=base_url)
+       
         return api_instance
         
     @staticmethod
@@ -69,7 +69,7 @@ class OvkApi:
         ):
         
         return httpx.get(
-                    f"{base_url}/token?username={login}&password={password}&grant_type=password"
+                    f"{base_url}/token?username={login}&password={password}&grant_type=password", timeout=10
                 ).json().get("access_token")
     
     async def _call_api(self, method: str, params: dict | None = None):
@@ -128,10 +128,8 @@ class OvkApi:
             while True:
                 try:
                     for event in await s.send_longpoll_request():
-                        if event.type_code == 4:
-                            msg = await Message.by_event(event=event)
-                            msg.bind_api(self)
-                            await processor.process(msg)
+                        print(event.__dict__)
+                        await processor.process_event(event=event, api = self)
                             
                 except httpx.TimeoutException:
                     continue
