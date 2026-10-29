@@ -130,7 +130,7 @@ class OvkApi:
         async with server as s:
             while True:
                 try:
-                    async for event in s.send_longpoll_request():
+                    async for event in s.get_updates():
                         await processor.process_event(event=event, api = self)
                             
                 except httpx.TimeoutException:

@@ -51,7 +51,25 @@ class LongPollServer:
                 "act": "a_check", "ts": self.ts, 
                 "mode": self._mode}
     
-    async def send_longpoll_request(self) -> list[LongPollEvent]:
+    async def get_updates(self) -> list[LongPollEvent]:
+            try:
+                data = await self._send_request()
+                
+            
+                updates = data.get("updates", [])
+                     
+                for update in updates:
+                    yield LongPollEvent(update)
+                            
+                self.ts = data.get("ts")
+                    
+            except TimeoutException as e:
+                raise e
+            except RequestError as e:
+                logger.error(f"Ошибка запроса: {e}")
+                await asyncio.sleep(5)
+                
+    async def _send_request(self):
             try:
                 response = await self.client.get(self.url,
                                             params = await self._request_parameters,
@@ -59,22 +77,10 @@ class LongPollServer:
                                             )
                 response.raise_for_status()
                 if response.status_code == 200:
-                    data = response.json()
-                    
-                    result = []
-                    
-                    updates = data.get("updates", [])
-                     
-                    for update in updates:
-                        yield LongPollEvent(update)
-                            
-                    self.ts = data.get("ts")
-                    
-            except TimeoutException as e:
+                 return response.json()
+            except Exception as e: 
                 raise e
-            except RequestError as e:
-                logger.error(f"Ошибка запроса: {e}")
-                await asyncio.sleep(5)
+                
     
     
     
