@@ -30,7 +30,6 @@ class OvkApi:
         self._token = token
         self._id = id
         self._client.headers.update({"Authorization": f"Bearer {self._token}"})
-
     @staticmethod
     def by_credentials(
         login: str | None = None,
@@ -137,6 +136,7 @@ class OvkApi:
                     continue
                 except Exception as e:
                     logger.error("[ERROR] ", e.__cause__, e.__context__)
+                    
             
 
     async def send_message(self, peer_id: int, message: str, reply_to: int | None = None, photo: Photo = None):

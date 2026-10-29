@@ -10,49 +10,9 @@ dotenv.load_dotenv()
 
 processor = Processor()
 
-
-#################################################
-#               DEPRECATED METHODS              #
-#################################################
-
-
-#@processor.add(Command(prefix=".", name="привет"))
-#async def hello_command(message: Message, api: OvkApi):
-#    """Приветствие пользователя"""
-#    await api.send_message(peer_id=message.peer_id, message="Привет! Как дела?")
-#    ### deprecated
-
-
-#@processor.add(Text("хай"))
-#async def hi_command(message: Message, api: OvkApi):
-#    """Реакция на точное 'хай'"""
-#    await api.send_message(peer_id=message.peer_id, message="Хай!")
-#    ### deprecated
-
-
-#@processor.add(Command(prefix=".", name="пинг"))
-#async def ping_command(message: Message, api: OvkApi):
-#    """Реагирует и на /ping, и на /pong"""
-#    print(message.text)
-#    await api.send_message(peer_id=message.peer_id, message="pong")
-#    ### deprecated
-    
-#@processor.add(Command(prefix=".", name="пикча"))
-#async def pikcha_command(message: Message, api: OvkApi):
-#    await api.send_photo(peer_id=message.peer_id, photo_path="photos/test.jpg", message="Вот твоя пикча!")
-#    ### deprecated
-
-#@processor.add(Command(prefix=".", name="пикча2"))
-#async def pikcha_command(message: Message, api: OvkApi):
-#    photo = Photo(path='photos/test.jpg')
-#    await api.send_message(peer_id=message.peer_id, message="Держи!", photo=photo)
-#    ### deprecated
-    
-    
-    
-#################################################
-#               ACTUAL METHODS                  #
-#################################################
+@processor.add(Command(prefix = ".", name="ди"))
+async def di_command(message: Message, di_stuff: str):
+    await message.reply(di_stuff)
 
 @processor.add(Command(prefix='.', name="ответ"))
 async def otvet_command(message: Message):
@@ -79,8 +39,6 @@ async def iskl_command(message: Message, arg1, arg2, tail = None):
 
 async def main():
     
-    ### FROM NOW WE USE BRAND NEW FACTORY FUNCTIONS TO INSTANTIATE OVKAPI OBJECT!
-    
     api = OvkApi.by_credentials(
         login=os.getenv("LOGIN"),
         password=os.getenv("PASSWORD")
@@ -89,11 +47,12 @@ async def main():
     ### or OvkApi.by_token(token)
     
 
-    ### await processor.add_di("api", api) 
-    ### no need to DI the API instance if you gonna use actual methods
+    some_stuff_to_test_di = "DI работает!"
+    await processor.add_di("di_stuff", some_stuff_to_test_di)
+
     
-    #### await api.long_poll_async(processor) <<< DEPRECATED
     await api.start_polling(processor)
+
        
 try:
     print("Start polling...")

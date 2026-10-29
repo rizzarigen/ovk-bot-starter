@@ -22,6 +22,7 @@ class LongPollServer:
         return self
     
     async def __aexit__(self, exc_type, exc, tb):
+        print("\nClosing LP connection...")
         await self.client.aclose()
     
     @staticmethod
