@@ -8,7 +8,7 @@ class Text(BaseFilter):
         self.text = text
         self.case_sensitive = case_sensitive
 
-    def __call__(self, message: Message) -> bool:
+    async def __call__(self, message: Message) -> bool:
         if not message.text:
             return False
         if self.case_sensitive:

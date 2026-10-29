@@ -16,9 +16,7 @@ class Handler(BaseModel):
     
     async def is_match(self, message: Message) -> bool:        
         for filter in self.filters:
-            if filter(message):
-                continue
-            else:
+            if not await filter(message):
                 return False
         return True
     
@@ -52,7 +50,6 @@ class Handler(BaseModel):
                     tail = " ".join(args[required_args_count:])
                     kwargs["tail"] = tail
                 
-                print(kwargs)
             return kwargs
     
     async def handle(self, msg: Message, di: dict):

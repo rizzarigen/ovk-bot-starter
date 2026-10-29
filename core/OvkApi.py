@@ -18,18 +18,17 @@ class OvkApi:
     def __init__(
         self,
         token: str | None = None,
+        id: int = None,
         base_url: str = "https://api.openvk.org",
     ):
         
         self._client = httpx.AsyncClient(base_url=base_url)
-
+        
         if token is None:
             raise ValueError("There is not any token")
 
-        self._token = token if token is not None else httpx.get(
-            f"{base_url}/token?username={login}&password={password}&grant_type=password"
-        ).json().get("access_token")
-
+        self._token = token
+        self._id = id
         self._client.headers.update({"Authorization": f"Bearer {self._token}"})
 
     @staticmethod
@@ -41,13 +40,13 @@ class OvkApi:
         if login is None or password is None:
             raise ValueError("Give the full credentials!")
         
-        token = OvkApi._get_token(
+        authorize = OvkApi._get_authorize(
                                 login,
                                 password,
                                 base_url
                             )
-        print("token is ready")     
-        api_instance = OvkApi(token=token, base_url=base_url)
+        logger.debug("Token is ready!")   
+        api_instance = OvkApi(token=authorize.get("access_token"), id = authorize.get("user_id"), base_url=base_url)
        
         return api_instance
         
@@ -63,14 +62,18 @@ class OvkApi:
         return OvkApi(token = token, base_url = base_url)
     
     @staticmethod
-    def _get_token(login: str | None = None,
+    def _get_authorize(login: str | None = None,
         password: str | None = None,
         base_url: str | None = "https://api.openvk.org"
         ):
         
         return httpx.get(
                     f"{base_url}/token?username={login}&password={password}&grant_type=password", timeout=10
-                ).json().get("access_token")
+                ).json()
+        
+    @property
+    def id(self):
+        return self._id
     
     async def _call_api(self, method: str, params: dict | None = None):
         if params is None:
@@ -127,8 +130,7 @@ class OvkApi:
         async with server as s:
             while True:
                 try:
-                    for event in await s.send_longpoll_request():
-                        print(event.__dict__)
+                    async for event in s.send_longpoll_request():
                         await processor.process_event(event=event, api = self)
                             
                 except httpx.TimeoutException:

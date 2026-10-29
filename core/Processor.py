@@ -26,15 +26,14 @@ class Processor:
     async def _process_message(self, message: Message):
         for handler in self.handlers:
             if await handler.is_match(message):  
-                print("MATCHED!")
                 await handler.handle(message, self.di)
                 return
             
     async def process_event(self, event: LongPollEvent, api: "OvkApi"):        
         if event.type_code == 4:
-            msg = await Message.by_event(event)
+            msg = await Message.by_event(event) 
             msg.bind_api(api)
-            await self._process_message(msg)
+            return await self._process_message(msg) if msg.extra_fields.get("from") != api.id else None
         
     async def add_di(self, name: str, value):
         self.di[name] = value

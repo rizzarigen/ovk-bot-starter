@@ -52,7 +52,6 @@ class LongPollServer:
                 "mode": self._mode}
     
     async def send_longpoll_request(self) -> list[LongPollEvent]:
-            print("бляь")
             try:
                 response = await self.client.get(self.url,
                                             params = await self._request_parameters,
@@ -67,11 +66,10 @@ class LongPollServer:
                     updates = data.get("updates", [])
                      
                     for update in updates:
-                        result.append(
-                            LongPollEvent(update)
-                            )
+                        yield LongPollEvent(update)
+                            
                     self.ts = data.get("ts")
-                    return result
+                    
             except TimeoutException as e:
                 raise e
             except RequestError as e:

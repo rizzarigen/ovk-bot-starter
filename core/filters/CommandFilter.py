@@ -17,7 +17,7 @@ class Command(BaseFilter):
         self.case_sensitive = case_sensitive
         self.req_args = req_args
 
-    def __call__(self, message: Message) -> bool:
+    async def __call__(self, message: Message) -> bool:
         if not message.text:
             return False
 

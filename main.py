@@ -65,12 +65,11 @@ async def otvet_command(message: Message):
     
 @processor.add(Command(prefix='.', name="реплай"))
 async def otvet_command(message: Message):
-    await message.reply("+реп" )
+    await message.reply(".реплай" )
     
 ### tail = None is important if you gonna use it. Temporarily workarounded, yep.
 @processor.add(Command(prefix='.', name="арги", req_args=["arg1", "arg2"]))
 async def iskl_command(message: Message, arg1, arg2, tail = None):
-    print("handled")
     await message.answer(f"Опа! Аргументы: {arg1=}, {arg2=}, {tail=}")
     
  
@@ -95,7 +94,6 @@ async def main():
     
     #### await api.long_poll_async(processor) <<< DEPRECATED
     await api.start_polling(processor)
-       
        
 try:
     print("Start polling...")
